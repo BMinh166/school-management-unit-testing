@@ -237,21 +237,18 @@ public class StudentTests
     }
 
     [Fact]
-    public void UpdateAcademicRecord_WhenStudentIsInactive_ShouldAllowReactivationAndGraduation()
+    public void UpdateAcademicRecord_WhenStudentIsInactive_ShouldUpdateAcademicRecord()
     {
         // Arrange
         var student = CreateStudent();
         student.Deactivate();
         var academicRecord = new AcademicRecord(6, 130, false);
-        student.UpdateAcademicRecord(academicRecord);
-        student.Activate();
-        student.UpdateFullName(" Other ");
-
         // Act
-        student.Graduate();
+        student.UpdateAcademicRecord(academicRecord);
 
         // Assert
-        Assert.Equal(StudentStatus.Graduated, student.Status);
+        Assert.Equal(academicRecord, student.AcademicRecord);
+        Assert.Equal(StudentStatus.Inactive, student.Status);
     }
 
     [Fact]
@@ -292,6 +289,34 @@ public class StudentTests
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => student.UpdateAcademicRecord(academicRecord));
+    }
+
+    [Fact]
+    public void Graduate_WhenStudentWasReactivatedAfterRecordUpdate_ShouldSetStatusToGraduated()
+    {
+        // Arrange
+        var student = CreateStudent(4, 100);
+        student.Deactivate();
+        var academicRecord = new AcademicRecord(6, 130, false);
+        student.UpdateAcademicRecord(academicRecord);
+        student.Activate();
+
+        // Act
+        student.Graduate();
+
+        // Assert
+        Assert.Equal(StudentStatus.Graduated, student.Status);
+    }
+
+    [Fact]
+    public void Deactivate_WhenStudentIsGraduated_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var student = CreateStudent();
+        student.Graduate();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => student.Deactivate());
     }
 
     [Fact]

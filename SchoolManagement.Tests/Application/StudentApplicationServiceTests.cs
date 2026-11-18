@@ -10,6 +10,7 @@ using Xunit;
 
 namespace SchoolManagement.Tests.Application;
 
+// These tests use mocks for repository interactions and an in-memory repository for service workflows.
 public class StudentApplicationServiceTests
 {
     [Fact]
@@ -189,6 +190,25 @@ public class StudentApplicationServiceTests
         Assert.Equal(6, result.GradePointAverage);
         Assert.Equal(130, result.EarnedCredits);
         Assert.Equal(StudentStatus.Graduated, result.Status);
+    }
+
+    [Fact]
+    public async Task UpdateStudentNameAsync_WhenStudentIsInactive_ShouldThrowAndLeaveStoredNameUnchanged()
+    {
+        // Arrange
+        var repository = new InMemoryStudentRepository();
+        var graduationService = new StudentGraduationService();
+        var service = new StudentApplicationService(repository, graduationService);
+        var student = await service.CreateStudentAsync("STU123456", "Name", "a@example.com", 5, 120, false);
+        await service.DeactivateStudentAsync(student.Id);
+
+        // Act
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateStudentNameAsync(student.Id, "Changed"));
+
+        // Assert
+        var storedStudent = await service.GetStudentByIdAsync(student.Id);
+        Assert.Equal("Name", storedStudent.FullName);
+        Assert.Equal(StudentStatus.Inactive, storedStudent.Status);
     }
 
     [Fact]

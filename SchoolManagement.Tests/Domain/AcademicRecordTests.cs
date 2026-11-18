@@ -7,12 +7,6 @@ namespace SchoolManagement.Tests.Domain;
 
 public class AcademicRecordTests
 {
-    // TODO: Test accept GPA boundaries 0 and 10 and zero credits.
-
-    // TODO: Test reject GPA outside 0 to 10 and negative credits.
-
-    // TODO: Test compare all fields by value.
-
     [Fact]
     public void Constructor_WhenValuesAreEqual_ShouldCompareByValue()
     {
@@ -32,6 +26,32 @@ public class AcademicRecordTests
 
         // Assert
         Assert.Equal(10, record.GradePointAverage);
+    }
+
+    [Fact]
+    public void Constructor_WhenGpaAndCreditsAreZero_ShouldRetainValues()
+    {
+        // Act
+        var record = new AcademicRecord(0, 0, false);
+
+        // Assert
+        Assert.Equal(0, record.GradePointAverage);
+        Assert.Equal(0, record.EarnedCredits);
+    }
+
+    [Fact]
+    public void Equals_WhenAnyFieldDiffers_ShouldReturnFalse()
+    {
+        // Arrange
+        var record = new AcademicRecord(5, 120, false);
+        var differentGpa = new AcademicRecord(6, 120, false);
+        var differentCredits = new AcademicRecord(5, 121, false);
+        var differentDiscipline = new AcademicRecord(5, 120, true);
+
+        // Assert
+        Assert.NotEqual(record, differentGpa);
+        Assert.NotEqual(record, differentCredits);
+        Assert.NotEqual(record, differentDiscipline);
     }
 
     [Theory]

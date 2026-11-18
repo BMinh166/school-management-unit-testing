@@ -7,12 +7,6 @@ namespace SchoolManagement.Tests.Domain;
 
 public class StudentCodeTests
 {
-    // TODO: Test accept STU followed by exactly six ASCII digits.
-
-    // TODO: Test reject missing, malformed, and incorrectly cased codes.
-
-    // TODO: Test trim and compare codes by value.
-
     [Theory]
     [InlineData("STU000001")]
     [InlineData(" STU123456 ")]
@@ -24,15 +18,29 @@ public class StudentCodeTests
         // Assert
         Assert.Equal(value.Trim(), studentCode.Value);
     }
+
+    [Fact]
+    public void Equals_WhenCodesDifferOnlyByWhitespace_ShouldReturnTrue()
+    {
+        // Arrange
+        var first = new StudentCode("STU123456");
+        var second = new StudentCode(" STU123456 ");
+
+        // Assert
+        Assert.Equal(first, second);
+    }
+
     [Theory]
+    [InlineData(null)]
     [InlineData("")]
+    [InlineData(" ")]
     [InlineData("stu000001")]
     [InlineData("STU12345")]
     [InlineData("STU12345x")]
     [InlineData("STU１２３４５６")]
-    public void Constructor_WhenValueIsInvalid_ShouldThrowArgumentException(string value)
+    public void Constructor_WhenValueIsInvalid_ShouldThrowArgumentException(string? value)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => new StudentCode(value));
+        Assert.Throws<ArgumentException>(() => new StudentCode(value!));
     }
 }

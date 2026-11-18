@@ -43,6 +43,22 @@ public class InMemoryStudentRepositoryTests
     }
 
     [Fact]
+    public async Task AddAsync_WhenOriginalStudentChanges_ShouldLeaveStoredStudentUnchanged()
+    {
+        // Arrange
+        var repository = new InMemoryStudentRepository();
+        var student = CreateStudent();
+        await repository.AddAsync(student);
+
+        // Act
+        student.UpdateFullName("Changed");
+
+        // Assert
+        var storedStudent = await repository.GetByIdAsync(student.Id);
+        Assert.Equal("Name", storedStudent!.FullName);
+    }
+
+    [Fact]
     public async Task ExistsByCodeAsync_WhenStudentExists_ShouldReturnTrue()
     {
         // Arrange
