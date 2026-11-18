@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:5000
+@studentId = 00000000-0000-0000-0000-000000000000
+
+### Create a student; copy the returned id into studentId above.
+POST {{baseUrl}}/api/students
+Content-Type: application/json
+
+{
+  "studentCode": "STU123456",
+  "fullName": "Nguyen An",
+  "email": "an@example.com",
+  "gradePointAverage": 5,
+  "earnedCredits": 120,
+  "hasActiveDisciplinaryAction": false
+}
+
+### Retrieve
+GET {{baseUrl}}/api/students/{{studentId}}
+
+### Update name
+PUT {{baseUrl}}/api/students/{{studentId}}/name
+Content-Type: application/json
+
+{ "fullName": "Nguyen Minh An" }
+
+### Update email
+PUT {{baseUrl}}/api/students/{{studentId}}/email
+Content-Type: application/json
+
+{ "email": "minh.an@example.com" }
+
+### Update academic record
+PUT {{baseUrl}}/api/students/{{studentId}}/academic-record
+Content-Type: application/json
+
+{ "gradePointAverage": 6, "earnedCredits": 130, "hasActiveDisciplinaryAction": false }
+
+### Deactivate
+POST {{baseUrl}}/api/students/{{studentId}}/deactivate
+
+### Activate
+POST {{baseUrl}}/api/students/{{studentId}}/activate
+
+### Evaluate graduation
+GET {{baseUrl}}/api/students/{{studentId}}/graduation-eligibility
+
+### Graduate
+POST {{baseUrl}}/api/students/{{studentId}}/graduate

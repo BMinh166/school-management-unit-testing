@@ -37,6 +37,7 @@ coverage.opencover.xml
 !.env.example
 secrets.json
 appsettings.Development.local.json
+SchoolManagement.API/appsettings.Development.json
 
 # NuGet packages
 *.nupkg
