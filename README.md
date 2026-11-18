@@ -1,35 +1,36 @@
-# School Management — Unit Testing
+# School Management
 
-Project thực hành Unit Testing bằng **C# / .NET 10**, sử dụng **xUnit** và **Moq**, được tổ chức theo hướng Domain-Driven Design (DDD).
+Ứng dụng quản lý sinh viên bằng C# / .NET 10, cung cấp API để quản lý thông tin, trạng thái và xét điều kiện tốt nghiệp.
 
-## Nội dung
+Project được tổ chức theo Domain-Driven Design (DDD):
 
-- Quản lý thông tin và trạng thái sinh viên.
-- Kiểm tra dữ liệu đầu vào bằng Value Objects.
-- Kiểm tra điều kiện tốt nghiệp.
-- Unit Test cho Domain, Application Service và In-Memory Repository.
-
-## Cấu trúc project
-
-- `SchoolManagement.Domain`: Entity, Value Objects và nghiệp vụ.
-- `SchoolManagement.Application`: Xử lý các chức năng ứng dụng.
-- `SchoolManagement.Infrastructure`: PostgreSQL persistence, migrations, and an in-memory repository for tests.
+- `SchoolManagement.Domain`: thực thể, value object và quy tắc nghiệp vụ.
+- `SchoolManagement.Application`: các chức năng ứng dụng.
+- `SchoolManagement.Infrastructure`: lưu trữ PostgreSQL, migration và repository in-memory.
 - `SchoolManagement.API`: ASP.NET Core Web API.
-- `SchoolManagement.Tests`: Unit Tests sử dụng xUnit và Moq.
+- `SchoolManagement.Tests`: kiểm thử với xUnit và Moq.
 
-## Chạy kiểm thử
+## Cài đặt và chạy
 
-Yêu cầu **.NET 10 SDK**.
+Yêu cầu .NET 10 SDK và PostgreSQL. Tạo database bằng công cụ PostgreSQL, chẳng hạn:
 
-```bash
-dotnet test
+```sql
+CREATE DATABASE school_management;
 ```
 
-## Web API
+Cấu hình `SchoolManagement.API/appsettings.Development.json` trên máy cá nhân:
 
-Install PostgreSQL, create a development database and a database user with permission to create tables, and set `ConnectionStrings__SchoolDatabase` in your environment to the connection string. Supply credentials locally; do not commit them. For example, in PowerShell use `$env:ConnectionStrings__SchoolDatabase = '<your local connection string>'`.
+```json
+{
+  "ConnectionStrings": {
+    "SchoolDatabase": "Host=localhost;Port=5432;Database=school_management;Username=postgres;Password=<mat-khau-cua-ban>"
+  }
+}
+```
 
-Install the EF Core command-line tool matching EF Core 10, then apply the included migration:
+Thay thông tin đăng nhập bằng thông tin PostgreSQL của bạn. Không đưa mật khẩu thật vào Git. Tài khoản database cần quyền tạo bảng.
+
+Tại thư mục gốc project, cài EF Core CLI nếu chưa có, sau đó áp dụng migration:
 
 ```bash
 dotnet tool install --global dotnet-ef --version 10.0.14
@@ -37,14 +38,16 @@ dotnet restore
 dotnet ef database update --project SchoolManagement.Infrastructure --startup-project SchoolManagement.Infrastructure
 ```
 
-The EF tools use the same environment variable. The application does not apply migrations automatically. Run the API with the .NET 10 SDK:
+Chạy API trong môi trường Development (PowerShell):
 
-```bash
-dotnet restore
-dotnet run --project SchoolManagement.API --urls http://localhost:5000
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = 'Development'
+dotnet run --project SchoolManagement.API --no-launch-profile --urls http://localhost:5000
 ```
 
-The OpenAPI document is available at `http://localhost:5000/openapi/v1.json` and can be opened with an OpenAPI client. See `SchoolManagement.API/SchoolManagement.API.http` for sample requests.
+OpenAPI: `http://localhost:5000/openapi/v1.json`. Các request mẫu nằm trong `SchoolManagement.API/SchoolManagement.API.http`.
+
+## API endpoints
 
 | Method | Path | Purpose | JSON body fields |
 | --- | --- | --- | --- |
@@ -58,7 +61,7 @@ The OpenAPI document is available at `http://localhost:5000/openapi/v1.json` and
 | GET | `/api/students/{id}/graduation-eligibility` | Evaluate graduation | None |
 | POST | `/api/students/{id}/graduate` | Graduate | None |
 
-Example creation body:
+Ví dụ tạo sinh viên:
 
 ```json
 {
@@ -71,15 +74,27 @@ Example creation body:
 }
 ```
 
-Creation returns `201` and a `Location` header; other successful operations return `200`. Invalid input returns `400`, a missing student returns `404`, and a duplicate code or invalid state transition returns `409`. Errors use JSON Problem Details with `status` and `title`, plus `detail` or `errors` where applicable. Student `status` is numeric: 1 (active), 2 (inactive), or 3 (graduated).
+Mã sinh viên gồm `STU` và 6 chữ số, phải là duy nhất. Trạng thái trả về là `1` (đang hoạt động), `2` (ngừng hoạt động) hoặc `3` (đã tốt nghiệp).
 
-## PostgreSQL integration tests
+## Kiểm thử
 
-Create a separate database whose name ends in `_test` and set `SCHOOL_TEST_DATABASE` to its connection string. The test user needs permission to create and drop schemas and create tables within them. Each test creates a uniquely named schema, applies migrations there, and drops that schema afterward. Never point this variable at a development or production database. If `ConnectionStrings__SchoolDatabase` is set, tests also reject a matching host, port, and database.
+Chạy toàn bộ kiểm thử bằng `dotnet test`. Unit Test kiểm tra nghiệp vụ và các thành phần với dữ liệu in-memory hoặc mock, không cần PostgreSQL. Để chỉ chạy các bài không dùng PostgreSQL:
 
 ```bash
 dotnet test --filter "Category!=PostgreSQL"
+```
+
+PostgreSQL Integration Test kiểm tra repository với database thật. Tạo database riêng có tên kết thúc bằng `_test`, ví dụ:
+
+```sql
+CREATE DATABASE school_management_test;
+```
+
+Đặt biến môi trường `SCHOOL_TEST_DATABASE` trỏ tới database test, rồi chạy (ví dụ PowerShell):
+
+```powershell
+$env:SCHOOL_TEST_DATABASE = 'Host=localhost;Port=5432;Database=school_management_test;Username=postgres;Password=<mat-khau-cua-ban>'
 dotnet test --filter "Category=PostgreSQL"
 ```
 
-Without `SCHOOL_TEST_DATABASE`, PostgreSQL integration tests are reported as skipped. Other API tests use an in-memory repository and controller tests use a mocked repository.
+Không trỏ biến này tới database development hoặc production. Tài khoản test cần quyền tạo và xóa schema, tạo bảng; mỗi test tạo schema riêng, áp dụng migration và xóa schema sau khi chạy. Nếu chưa đặt biến, các PostgreSQL Integration Test sẽ được bỏ qua.
